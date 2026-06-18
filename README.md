@@ -51,36 +51,28 @@ sequenceDiagram
 
 To prevent signature overlays from shifting when documents are viewed across different device viewports, desktop sizes, or browser zooms, SignFlow uses a **Relative Coordinate Tracking Engine**.
 
-### 1. Viewport Normalization (Frontend)
-When a user draws a signature box or drags a template block onto the signature canvas, the viewport dimensions `(w_{client}, h_{client})` and absolute offset coordinates `(x_{client}, y_{client})` are mapped to relative percentage coordinates:
+### Viewport Normalization Matrix
+To handle cross-device responsiveness, raw screen pixel drop coordinates are normalized into strict percentages relative to the dynamic parent PDF viewport wrapper before storing them in MongoDB:
 
-$$x_{\%}= \left( \frac{x_{client}}{containerWidth} \right) \times 100$$
+$$x_{\%} = \left( \frac{\text{dropped\_x\_pixels}}{\text{pdf\_render\_width}} \right) \times 100$$
 
-$$y_{\%}= \left( \frac{y_{client}}{containerHeight} \right) \times 100$$
+$$y_{\%} = \left( \frac{\text{dropped\_y\_pixels}}{\text{pdf\_render\_height}} \right) \times 100$$
 
-$$w_{\%}= \left( \frac{w_{client}}{containerWidth} \right) \times 100$$
+### Y-Axis Coordinate Inversion
+Web viewports use a top-left origin $(0, 0)$ with $y$ values increasing downwards, whereas standard PDF specifications use a standard Cartesian coordinate system with a bottom-left origin $(0, 0)$ where $y$ values increase upwards.
 
-$$h_{\%}= \left( \frac{h_{client}}{containerHeight} \right) \times 100$$
+The target vertical point $y_{pdf}$ is inverted precisely using:
 
-These percentages represent viewport-agnostic locations saved directly in MongoDB.
+$$y_{pdf} = \text{pageHeight} - \left( \frac{y_{\%}}{100} \times \text{pageHeight} \right) - \left( \frac{\text{height}_{\%}}{100} \times \text{pageHeight} \right)$$
 
-### 2. PDF Point Compilation (Backend)
-During compilation, `pdf-lib` loads the original file buffer and determines the physical PDF page dimensions in points (where $1 \text{ inch} = 72 \text{ points}$).
+### Backend Point Stamping
+When processing via `pdf-lib` on the Node server layer, the fractional dimensions map seamlessly back to absolute PDF points:
 
-We convert the relative percentage coordinates back into physical page points:
+$$\text{Final X} = \left( \frac{x_{\%}}{100} \right) \times \text{pageWidth}$$
 
-$$x_{pdf} = \left( \frac{x_{\%}}{100} \right) \times pageWidth_{pdf}$$
+$$\text{Final Width} = \left( \frac{\text{width}_{\%}}{100} \right) \times \text{pageWidth}$$
 
-$$w_{pdf} = \left( \frac{w_{\%}}{100} \right) \times pageWidth_{pdf}$$
-
-$$h_{pdf} = \left( \frac{h_{\%}}{100} \right) \times pageHeight_{pdf}$$
-
-### 3. Y-Axis Coordinate Inversion
-Browser viewports use a top-left origin $(0,0)$ with $y$ values increasing downwards. In contrast, PDF specifications use a standard Cartesian coordinate system with a **bottom-left** origin $(0,0)$ where $y$ values increase upwards.
-
-To align the signature overlay, the vertical coordinate $y_{pdf}$ is computed using:
-
-$$y_{pdf} = pageHeight_{pdf} - \left( \frac{y_{\%}}{100} \times pageHeight_{pdf} \right) - h_{pdf}$$
+$$\text{Final Height} = \left( \frac{\text{height}_{\%}}{100} \right) \times \text{pageHeight}$$
 
 This mathematical transformation guarantees sub-pixel accuracy and perfect overlay alignment on the output PDF document, regardless of the screen size of the user who signed it.
 
