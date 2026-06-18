@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 min-h-screen selection:bg-brand-500 selection:text-white;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-700 rounded-full hover:bg-brand-500 transition-colors;
+  }
+}
+
+@layer components {
+  /* Premium Glassmorphism Card */
+  .glass-card {
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-card-hover {
+    @apply transition-all duration-300 hover:border-brand-500/30 hover:shadow-lg hover:shadow-brand-500/5;
+  }
+
+  /* Premium Glowing Gradients */
+  .glow-bg-primary {
+    background: radial-gradient(circle at 50% 50%, rgba(79, 115, 255, 0.15), transparent 60%);
+  }
+
+  .glow-bg-secondary {
+    background: radial-gradient(circle at 80% 20%, rgba(133, 163, 255, 0.12), transparent 50%);
+  }
+}
+
+/* Custom interactive input resets for beautiful dashboard styling */
+input, select, textarea {
+  outline: none;
+}
+
+/* High-contrast Neon Purple custom crosshair cursor */
+.cursor-crosshair {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='2.5'><circle cx='12' cy='12' r='3' stroke='%238B5CF6' stroke-width='1.5'/><path d='M12 2v6m0 8v6M2 12h6m8 0h6'/></svg>") 12 12, crosshair !important;
+}
+
